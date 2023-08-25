@@ -18,12 +18,21 @@ namespace Gun
         private float _time;
         private int _currentClip;
         private bool _canShoot = true;
-        
+
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+            
+            if (IsClient && IsOwner)
+            {
+                _inputSystem = new InputSystem();
+                _inputSystem.Gun.Recharge.performed += _ => StartCoroutine(Recharge());
+                _inputSystem.Gun.Enable();
+            }
+        }
+
         private void Start()
         {
-            _inputSystem = new InputSystem();
-            _inputSystem.Gun.Recharge.performed += _ => StartCoroutine(Recharge());
-            _inputSystem.Gun.Enable();
             _currentClip = _maxClip;
             _time = _rateOfFire;
         }

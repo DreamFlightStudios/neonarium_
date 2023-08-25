@@ -3,15 +3,15 @@ using UnityEngine;
 
 namespace HealthSystem
 {
-    public class Health : MonoBehaviour, IHealthSystem
+    public class Health : NetworkBehaviour, IHealthSystem
     {
         [SerializeField] private int _maxHealth = 3;
-        private int _currentHealth;
+        private readonly NetworkVariable<int> _currentHealth = new NetworkVariable<int>();
         private bool _isDied;
 
         private void Start()
         {
-            _currentHealth = _maxHealth;
+            ChangeHealthServerRpc(_maxHealth);
             _isDied = false;
         }
 
@@ -19,9 +19,9 @@ namespace HealthSystem
         {
             if (_isDied) return;
             
-            _currentHealth -= damage;
+            ChangeHealthServerRpc(_currentHealth.Value - damage);
             
-            if (_currentHealth > 0) return;
+            if (_currentHealth.Value > 0) return;
             DieServerRpc();
             _isDied = true;
         }
@@ -33,10 +33,16 @@ namespace HealthSystem
         {
             if (_isDied) return;
             
-            _currentHealth += health;
-            Mathf.Clamp(_currentHealth, 0, _maxHealth);
+            ChangeHealthServerRpc(_currentHealth.Value + health);
         }
 
         public void Revival() { if (_isDied) Start(); }
+
+        [ServerRpc]
+        private void ChangeHealthServerRpc(int value)
+        {
+            _currentHealth.Value = value;
+            Mathf.Clamp(_currentHealth.Value, 0, _maxHealth);
+        }
     }
 }

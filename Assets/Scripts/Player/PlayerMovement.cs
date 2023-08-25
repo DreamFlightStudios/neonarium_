@@ -3,6 +3,7 @@ using Unity.Collections;
 using Unity.Jobs;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Player
 {
@@ -33,15 +34,22 @@ namespace Player
         private Rigidbody _currentRigidbodyObject;
         private Collider _currentColliderObject;
 
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+            if (IsClient && IsOwner)
+            {
+                _inputSystem = new InputSystem();
+                _inputSystem.Player.Jump.performed += _ => Jump();
+                _inputSystem.Player.PickUp.performed += _ => PickUp();
+                _inputSystem.Player.Drop.performed += _ => Drop();
+                _inputSystem.Player.Trow.performed += _ => Drop(true);
+                _inputSystem.Player.Enable();
+            }
+        }
+
         private void Start()
         {
-            _inputSystem = new InputSystem();
-            _inputSystem.Player.Jump.performed += _ => Jump();
-            _inputSystem.Player.PickUp.performed += _ => PickUp();
-            _inputSystem.Player.Drop.performed += _ => Drop();
-            _inputSystem.Player.Trow.performed += _ => Drop(true);
-            _inputSystem.Player.Enable();
-
             _characterController = GetComponent<CharacterController>();
             _playerCollider = GetComponent<Collider>();
             _playerCamera = GetComponentInChildren<Camera>();
