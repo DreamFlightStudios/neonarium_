@@ -46,24 +46,6 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": true
                 },
                 {
-                    ""name"": ""LookGyro"",
-                    ""type"": ""Value"",
-                    ""id"": ""a53d1ffd-9a8d-434f-ab87-b94e3f0136d4"",
-                    ""expectedControlType"": ""Quaternion"",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": true
-                },
-                {
-                    ""name"": ""LookGy"",
-                    ""type"": ""Value"",
-                    ""id"": ""f8b08383-67f0-46e8-86cd-538073fc4ef5"",
-                    ""expectedControlType"": ""Vector3"",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": true
-                },
-                {
                     ""name"": ""Jump"",
                     ""type"": ""Button"",
                     ""id"": ""2f07af2e-e2a6-434d-b91c-b35fba998a92"",
@@ -94,6 +76,15 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
                     ""name"": ""Trow"",
                     ""type"": ""Button"",
                     ""id"": ""92c8db41-894f-4724-941d-b62663eef0a2"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Drop"",
+                    ""type"": ""Button"",
+                    ""id"": ""4fc03e36-aff5-47d1-a8b9-7dc826a7352b"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """",
@@ -225,7 +216,7 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""55497122-c528-4f2a-8f7a-0d022dbb10dd"",
-                    ""path"": ""<Mouse>/leftButton"",
+                    ""path"": ""<Keyboard>/e"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Keyboard & Mouse"",
@@ -236,7 +227,7 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""bc1fb0fb-eae8-4f3b-86ea-1a5a5f48ae8f"",
-                    ""path"": ""<Mouse>/rightButton"",
+                    ""path"": ""<Mouse>/middleButton"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Keyboard & Mouse"",
@@ -246,23 +237,60 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""6ce49511-3470-4387-a85c-8567b0331eb6"",
-                    ""path"": ""<AttitudeSensor>/attitude"",
+                    ""id"": ""d233b332-52f4-4a58-845a-e69156ee837a"",
+                    ""path"": ""<Mouse>/rightButton"",
                     ""interactions"": """",
                     ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""LookGyro"",
+                    ""groups"": ""Keyboard & Mouse"",
+                    ""action"": ""Drop"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
+        },
+        {
+            ""name"": ""Gun"",
+            ""id"": ""4302fb73-820b-404d-9f6c-ad6d6110ee27"",
+            ""actions"": [
+                {
+                    ""name"": ""Shoot"",
+                    ""type"": ""Button"",
+                    ""id"": ""a1bc407a-9677-4d44-b700-b868eaf5477f"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Recharge"",
+                    ""type"": ""Button"",
+                    ""id"": ""a6d6b552-4f76-4c9e-9a0e-2a5ba86b098f"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""8fe26d65-76b6-4c63-9f30-3f7a4920480d"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard & Mouse"",
+                    ""action"": ""Shoot"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
-                    ""id"": ""2a50d868-a950-4339-ab37-539f59643451"",
-                    ""path"": ""<Gyroscope>/angularVelocity"",
+                    ""id"": ""201cd850-b74c-4fa2-950c-4ed19d504ad1"",
+                    ""path"": ""<Keyboard>/r"",
                     ""interactions"": """",
                     ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""LookGy"",
+                    ""groups"": ""Keyboard & Mouse"",
+                    ""action"": ""Recharge"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -314,12 +342,15 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
         m_Player = asset.FindActionMap("Player", throwIfNotFound: true);
         m_Player_Move = m_Player.FindAction("Move", throwIfNotFound: true);
         m_Player_Look = m_Player.FindAction("Look", throwIfNotFound: true);
-        m_Player_LookGyro = m_Player.FindAction("LookGyro", throwIfNotFound: true);
-        m_Player_LookGy = m_Player.FindAction("LookGy", throwIfNotFound: true);
         m_Player_Jump = m_Player.FindAction("Jump", throwIfNotFound: true);
         m_Player_Sprint = m_Player.FindAction("Sprint", throwIfNotFound: true);
         m_Player_PickUp = m_Player.FindAction("PickUp", throwIfNotFound: true);
         m_Player_Trow = m_Player.FindAction("Trow", throwIfNotFound: true);
+        m_Player_Drop = m_Player.FindAction("Drop", throwIfNotFound: true);
+        // Gun
+        m_Gun = asset.FindActionMap("Gun", throwIfNotFound: true);
+        m_Gun_Shoot = m_Gun.FindAction("Shoot", throwIfNotFound: true);
+        m_Gun_Recharge = m_Gun.FindAction("Recharge", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -383,24 +414,22 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
     private List<IPlayerActions> m_PlayerActionsCallbackInterfaces = new List<IPlayerActions>();
     private readonly InputAction m_Player_Move;
     private readonly InputAction m_Player_Look;
-    private readonly InputAction m_Player_LookGyro;
-    private readonly InputAction m_Player_LookGy;
     private readonly InputAction m_Player_Jump;
     private readonly InputAction m_Player_Sprint;
     private readonly InputAction m_Player_PickUp;
     private readonly InputAction m_Player_Trow;
+    private readonly InputAction m_Player_Drop;
     public struct PlayerActions
     {
         private @InputSystem m_Wrapper;
         public PlayerActions(@InputSystem wrapper) { m_Wrapper = wrapper; }
         public InputAction @Move => m_Wrapper.m_Player_Move;
         public InputAction @Look => m_Wrapper.m_Player_Look;
-        public InputAction @LookGyro => m_Wrapper.m_Player_LookGyro;
-        public InputAction @LookGy => m_Wrapper.m_Player_LookGy;
         public InputAction @Jump => m_Wrapper.m_Player_Jump;
         public InputAction @Sprint => m_Wrapper.m_Player_Sprint;
         public InputAction @PickUp => m_Wrapper.m_Player_PickUp;
         public InputAction @Trow => m_Wrapper.m_Player_Trow;
+        public InputAction @Drop => m_Wrapper.m_Player_Drop;
         public InputActionMap Get() { return m_Wrapper.m_Player; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -416,12 +445,6 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
             @Look.started += instance.OnLook;
             @Look.performed += instance.OnLook;
             @Look.canceled += instance.OnLook;
-            @LookGyro.started += instance.OnLookGyro;
-            @LookGyro.performed += instance.OnLookGyro;
-            @LookGyro.canceled += instance.OnLookGyro;
-            @LookGy.started += instance.OnLookGy;
-            @LookGy.performed += instance.OnLookGy;
-            @LookGy.canceled += instance.OnLookGy;
             @Jump.started += instance.OnJump;
             @Jump.performed += instance.OnJump;
             @Jump.canceled += instance.OnJump;
@@ -434,6 +457,9 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
             @Trow.started += instance.OnTrow;
             @Trow.performed += instance.OnTrow;
             @Trow.canceled += instance.OnTrow;
+            @Drop.started += instance.OnDrop;
+            @Drop.performed += instance.OnDrop;
+            @Drop.canceled += instance.OnDrop;
         }
 
         private void UnregisterCallbacks(IPlayerActions instance)
@@ -444,12 +470,6 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
             @Look.started -= instance.OnLook;
             @Look.performed -= instance.OnLook;
             @Look.canceled -= instance.OnLook;
-            @LookGyro.started -= instance.OnLookGyro;
-            @LookGyro.performed -= instance.OnLookGyro;
-            @LookGyro.canceled -= instance.OnLookGyro;
-            @LookGy.started -= instance.OnLookGy;
-            @LookGy.performed -= instance.OnLookGy;
-            @LookGy.canceled -= instance.OnLookGy;
             @Jump.started -= instance.OnJump;
             @Jump.performed -= instance.OnJump;
             @Jump.canceled -= instance.OnJump;
@@ -462,6 +482,9 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
             @Trow.started -= instance.OnTrow;
             @Trow.performed -= instance.OnTrow;
             @Trow.canceled -= instance.OnTrow;
+            @Drop.started -= instance.OnDrop;
+            @Drop.performed -= instance.OnDrop;
+            @Drop.canceled -= instance.OnDrop;
         }
 
         public void RemoveCallbacks(IPlayerActions instance)
@@ -479,6 +502,60 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
         }
     }
     public PlayerActions @Player => new PlayerActions(this);
+
+    // Gun
+    private readonly InputActionMap m_Gun;
+    private List<IGunActions> m_GunActionsCallbackInterfaces = new List<IGunActions>();
+    private readonly InputAction m_Gun_Shoot;
+    private readonly InputAction m_Gun_Recharge;
+    public struct GunActions
+    {
+        private @InputSystem m_Wrapper;
+        public GunActions(@InputSystem wrapper) { m_Wrapper = wrapper; }
+        public InputAction @Shoot => m_Wrapper.m_Gun_Shoot;
+        public InputAction @Recharge => m_Wrapper.m_Gun_Recharge;
+        public InputActionMap Get() { return m_Wrapper.m_Gun; }
+        public void Enable() { Get().Enable(); }
+        public void Disable() { Get().Disable(); }
+        public bool enabled => Get().enabled;
+        public static implicit operator InputActionMap(GunActions set) { return set.Get(); }
+        public void AddCallbacks(IGunActions instance)
+        {
+            if (instance == null || m_Wrapper.m_GunActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_GunActionsCallbackInterfaces.Add(instance);
+            @Shoot.started += instance.OnShoot;
+            @Shoot.performed += instance.OnShoot;
+            @Shoot.canceled += instance.OnShoot;
+            @Recharge.started += instance.OnRecharge;
+            @Recharge.performed += instance.OnRecharge;
+            @Recharge.canceled += instance.OnRecharge;
+        }
+
+        private void UnregisterCallbacks(IGunActions instance)
+        {
+            @Shoot.started -= instance.OnShoot;
+            @Shoot.performed -= instance.OnShoot;
+            @Shoot.canceled -= instance.OnShoot;
+            @Recharge.started -= instance.OnRecharge;
+            @Recharge.performed -= instance.OnRecharge;
+            @Recharge.canceled -= instance.OnRecharge;
+        }
+
+        public void RemoveCallbacks(IGunActions instance)
+        {
+            if (m_Wrapper.m_GunActionsCallbackInterfaces.Remove(instance))
+                UnregisterCallbacks(instance);
+        }
+
+        public void SetCallbacks(IGunActions instance)
+        {
+            foreach (var item in m_Wrapper.m_GunActionsCallbackInterfaces)
+                UnregisterCallbacks(item);
+            m_Wrapper.m_GunActionsCallbackInterfaces.Clear();
+            AddCallbacks(instance);
+        }
+    }
+    public GunActions @Gun => new GunActions(this);
     private int m_GamepadSchemeIndex = -1;
     public InputControlScheme GamepadScheme
     {
@@ -510,11 +587,15 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
     {
         void OnMove(InputAction.CallbackContext context);
         void OnLook(InputAction.CallbackContext context);
-        void OnLookGyro(InputAction.CallbackContext context);
-        void OnLookGy(InputAction.CallbackContext context);
         void OnJump(InputAction.CallbackContext context);
         void OnSprint(InputAction.CallbackContext context);
         void OnPickUp(InputAction.CallbackContext context);
         void OnTrow(InputAction.CallbackContext context);
+        void OnDrop(InputAction.CallbackContext context);
+    }
+    public interface IGunActions
+    {
+        void OnShoot(InputAction.CallbackContext context);
+        void OnRecharge(InputAction.CallbackContext context);
     }
 }

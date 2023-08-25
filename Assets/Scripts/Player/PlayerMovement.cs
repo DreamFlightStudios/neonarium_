@@ -1,14 +1,13 @@
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
+using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 
 namespace Player
 {
     [RequireComponent(typeof(CharacterController))]
-    public class PlayerMovement : MonoBehaviour
+    public class PlayerMovement : NetworkBehaviour
     {
         [SerializeField] private float _walkSpeed = 5;
         [SerializeField] private float _runSpeed = 8;
@@ -39,7 +38,7 @@ namespace Player
             _inputSystem = new InputSystem();
             _inputSystem.Player.Jump.performed += _ => Jump();
             _inputSystem.Player.PickUp.performed += _ => PickUp();
-            _inputSystem.Player.PickUp.canceled += _ => Drop();
+            _inputSystem.Player.Drop.performed += _ => Drop();
             _inputSystem.Player.Trow.performed += _ => Drop(true);
             _inputSystem.Player.Enable();
 
@@ -52,11 +51,11 @@ namespace Player
             _outputVelocity = new NativeArray<Vector3>(2, Allocator.Persistent);
             
             Cursor.lockState = CursorLockMode.Locked;
-            Input.gyro.enabled = true;
         }
 
         private void Update()
         {
+            if (!IsOwner) return;
             NativeArray<JobHandle> jobs = new NativeArray<JobHandle>(2, Allocator.Temp);
 
             _outputCamera[0] = _rotation;
@@ -85,11 +84,9 @@ namespace Player
 
             _rotation = _outputCamera[1];
             _velocity = _outputVelocity[1];
-            
 
-            //_playerCamera.transform.localEulerAngles = _rotation;
+            _playerCamera.transform.localEulerAngles = _rotation;
             _characterController.Move(_velocity * Time.deltaTime);
-            _playerCamera.transform.localRotation = Input.gyro.attitude * new Quaternion(0, 0, 1, 0);
         }
 
         private void FixedUpdate()
@@ -102,6 +99,7 @@ namespace Player
 
         private void PickUp()
         {
+            if (!IsOwner) return;
             if (!Physics.Raycast(_playerCamera.transform.position, _playerCamera.transform.forward, out RaycastHit hit, _pickUpDistance, _canPickUpLayer)) return;
             
             _currentRigidbodyObject = hit.collider.gameObject.GetComponent<Rigidbody>();
@@ -116,6 +114,7 @@ namespace Player
 
         private void Drop(bool isThrow = false)
         {
+            if (!IsOwner) return;
             if (_currentRigidbodyObject == null) return;
             
             _joint.connectedBody = null;
@@ -133,7 +132,7 @@ namespace Player
         {
             _inputSystem.Player.Jump.performed -= _ => Jump();
             _inputSystem.Player.PickUp.performed -= _ => PickUp();
-            _inputSystem.Player.PickUp.canceled -= _ => Drop();
+            _inputSystem.Player.Drop.performed -= _ => Drop();
             _inputSystem.Player.Trow.performed -= _ => Drop(true);
             _inputSystem.Player.Disable();
             
