@@ -6,11 +6,13 @@ namespace DefaultNamespace
 {
     public class ButtonClient : MonoBehaviour
     {
-        [SerializeField] private Button _button;
+        [SerializeField] private Button _buttonClient;
+        [SerializeField] private Button _buttonHost;
 
         private void Start()
         {
-            _button.onClick.AddListener(() => NetworkManager.Singleton.StartClient());
+            _buttonClient.onClick.AddListener(() => NetworkManager.Singleton.StartClient());
+            _buttonHost.onClick.AddListener(() => NetworkManager.Singleton.StartHost());
         }
     }
 }

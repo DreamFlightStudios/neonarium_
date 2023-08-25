@@ -93,10 +93,16 @@ namespace Player
             _rotation = _outputCamera[1];
             _velocity = _outputVelocity[1];
 
-            _playerCamera.transform.localEulerAngles = _rotation;
-            _characterController.Move(_velocity * Time.deltaTime);
+            MoveServerRpc(_rotation, _velocity);
         }
 
+        [ServerRpc]
+        private void MoveServerRpc(Vector3 rotation, Vector3 velocity)
+        {
+            _playerCamera.transform.localEulerAngles = rotation;
+            _characterController.Move(velocity * Time.deltaTime);
+        }
+        
         private void FixedUpdate()
         {
             if (_characterController.isGrounded) _velocity.y = -0.1f;
