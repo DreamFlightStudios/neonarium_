@@ -22,17 +22,14 @@ namespace Gun
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
-            
-            if (IsClient && IsOwner)
-            {
-                _inputSystem = new InputSystem();
-                _inputSystem.Gun.Recharge.performed += _ => StartCoroutine(Recharge());
-                _inputSystem.Gun.Enable();
-            }
+            if (IsClient && IsOwner) Init();
         }
 
-        private void Start()
+        private void Init()
         {
+            _inputSystem = new InputSystem();
+            _inputSystem.Gun.Recharge.performed += _ => StartCoroutine(Recharge());
+            _inputSystem.Gun.Enable();
             _currentClip = _maxClip;
             _time = _rateOfFire;
         }

@@ -9,8 +9,9 @@ namespace HealthSystem
         private readonly NetworkVariable<int> _currentHealth = new NetworkVariable<int>();
         private bool _isDied;
 
-        private void Start()
+        public override void OnNetworkSpawn()
         {
+            base.OnNetworkSpawn();
             ChangeHealthServerRpc(_maxHealth);
             _isDied = false;
         }
@@ -27,7 +28,7 @@ namespace HealthSystem
         }
 
         [ServerRpc]
-        private void DieServerRpc() => gameObject.SetActive(false);
+        private void DieServerRpc() => GetComponent<NetworkObject>().Despawn();
 
         public void Recovery(int health)
         {
@@ -36,7 +37,7 @@ namespace HealthSystem
             ChangeHealthServerRpc(_currentHealth.Value + health);
         }
 
-        public void Revival() { if (_isDied) Start(); }
+        public void Revival() { if (_isDied) OnNetworkSpawn(); }
 
         [ServerRpc]
         private void ChangeHealthServerRpc(int value)

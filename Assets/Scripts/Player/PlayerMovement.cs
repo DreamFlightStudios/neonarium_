@@ -37,19 +37,18 @@ namespace Player
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
-            if (IsClient && IsOwner)
-            {
-                _inputSystem = new InputSystem();
-                _inputSystem.Player.Jump.performed += _ => Jump();
-                _inputSystem.Player.PickUp.performed += _ => PickUp();
-                _inputSystem.Player.Drop.performed += _ => Drop();
-                _inputSystem.Player.Trow.performed += _ => Drop(true);
-                _inputSystem.Player.Enable();
-            }
+            if (IsClient && IsOwner) Init();
         }
 
-        private void Start()
+        private void Init()
         {
+            _inputSystem = new InputSystem();
+            _inputSystem.Player.Jump.performed += _ => Jump();
+            _inputSystem.Player.PickUp.performed += _ => PickUp();
+            _inputSystem.Player.Drop.performed += _ => Drop();
+            _inputSystem.Player.Trow.performed += _ => Drop(true);
+            _inputSystem.Player.Enable();
+            
             _characterController = GetComponent<CharacterController>();
             _playerCollider = GetComponent<Collider>();
             _playerCamera = GetComponentInChildren<Camera>();
@@ -64,6 +63,7 @@ namespace Player
         private void Update()
         {
             if (!IsOwner) return;
+            if (!Application.isFocused) return;
             NativeArray<JobHandle> jobs = new NativeArray<JobHandle>(2, Allocator.Temp);
 
             _outputCamera[0] = _rotation;
@@ -93,18 +93,13 @@ namespace Player
             _rotation = _outputCamera[1];
             _velocity = _outputVelocity[1];
 
-            MoveServerRpc(_rotation, _velocity);
+            _playerCamera.transform.localEulerAngles = _rotation;
+            _characterController.Move(_velocity * Time.deltaTime);
         }
 
-        [ServerRpc]
-        private void MoveServerRpc(Vector3 rotation, Vector3 velocity)
-        {
-            _playerCamera.transform.localEulerAngles = rotation;
-            _characterController.Move(velocity * Time.deltaTime);
-        }
-        
         private void FixedUpdate()
         {
+            if (!IsOwner) return;
             if (_characterController.isGrounded) _velocity.y = -0.1f;
             else _velocity.y += _gravity * Time.fixedDeltaTime;
         }
@@ -142,16 +137,17 @@ namespace Player
             _currentRigidbodyObject = null;
         }
 
-        private void OnDestroy()
+        public override void OnNetworkDespawn()
         {
             _inputSystem.Player.Jump.performed -= _ => Jump();
             _inputSystem.Player.PickUp.performed -= _ => PickUp();
             _inputSystem.Player.Drop.performed -= _ => Drop();
             _inputSystem.Player.Trow.performed -= _ => Drop(true);
             _inputSystem.Player.Disable();
-            
+
             _outputCamera.Dispose();
             _outputVelocity.Dispose();
+            base.OnNetworkDespawn();
         }
     }
 }
