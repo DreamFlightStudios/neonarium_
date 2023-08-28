@@ -7,11 +7,18 @@ namespace HealthSystem
     {
         [SerializeField] private int _maxHealth = 3;
         private readonly NetworkVariable<int> _currentHealth = new NetworkVariable<int>();
+        private PlayerManager _playerManager;
         private bool _isDied;
 
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
+            _playerManager = FindObjectOfType<PlayerManager>();
+            Init();
+        }
+
+        private void Init()
+        {
             ChangeHealthServerRpc(_maxHealth);
             _isDied = false;
         }
@@ -27,19 +34,24 @@ namespace HealthSystem
             _isDied = true;
         }
 
-        [ServerRpc]
-        private void DieServerRpc() => GetComponent<NetworkObject>().Despawn();
-
-        public void Recovery(int health)
+        [ServerRpc(RequireOwnership = false)]
+        private void DieServerRpc()
         {
-            if (_isDied) return;
-            
-            ChangeHealthServerRpc(_currentHealth.Value + health);
+            NetworkObject.Despawn(false);
+            gameObject.SetActive(false);
+            _playerManager.SpawnPlayerWithDelay(this);
         }
 
-        public void Revival() { if (_isDied) OnNetworkSpawn(); }
+        public void Recovery(int health) { if (!_isDied) ChangeHealthServerRpc(_currentHealth.Value + health); }
 
-        [ServerRpc]
+        public void Revival()
+        {
+            if (!_isDied) return;
+            NetworkObject.Spawn();
+            Init();
+        }
+
+        [ServerRpc(RequireOwnership = false)]
         private void ChangeHealthServerRpc(int value)
         {
             _currentHealth.Value = value;

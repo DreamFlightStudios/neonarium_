@@ -3,7 +3,6 @@ using Unity.Collections;
 using Unity.Jobs;
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace Player
 {
@@ -15,25 +14,16 @@ namespace Player
         [SerializeField] private float _rotateSpeed = 10;
         [SerializeField] private float _jumpForce = 5;
         [SerializeField] private float _gravity = -9.81f;
-        
-        [SerializeField] private float _pickUpDistance = 5;
-        [SerializeField] private float _trowForce = 6;
-        [SerializeField] private LayerMask _canPickUpLayer;
 
         private InputSystem _inputSystem;
         private CharacterController _characterController;
-        private Collider _playerCollider;
         private Camera _playerCamera;
 
         private Vector3 _velocity;
         private Vector2 _rotation;
         private NativeArray<Vector2> _outputCamera;
         private NativeArray<Vector3> _outputVelocity;
-
-        private Joint _joint;
-        private Rigidbody _currentRigidbodyObject;
-        private Collider _currentColliderObject;
-
+        
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
@@ -44,15 +34,10 @@ namespace Player
         {
             _inputSystem = new InputSystem();
             _inputSystem.Player.Jump.performed += _ => Jump();
-            _inputSystem.Player.PickUp.performed += _ => PickUp();
-            _inputSystem.Player.Drop.performed += _ => Drop();
-            _inputSystem.Player.Trow.performed += _ => Drop(true);
             _inputSystem.Player.Enable();
             
             _characterController = GetComponent<CharacterController>();
-            _playerCollider = GetComponent<Collider>();
             _playerCamera = GetComponentInChildren<Camera>();
-            _joint = GetComponentInChildren<Joint>();
             
             _outputCamera = new NativeArray<Vector2>( 2, Allocator.Persistent); 
             _outputVelocity = new NativeArray<Vector3>(2, Allocator.Persistent);
@@ -106,44 +91,9 @@ namespace Player
 
         private void Jump() { if (_characterController.isGrounded) _velocity.y = _jumpForce; }
 
-        private void PickUp()
-        {
-            if (!IsOwner) return;
-            if (!Physics.Raycast(_playerCamera.transform.position, _playerCamera.transform.forward, out RaycastHit hit, _pickUpDistance, _canPickUpLayer)) return;
-            
-            _currentRigidbodyObject = hit.collider.gameObject.GetComponent<Rigidbody>();
-            _currentColliderObject = _currentRigidbodyObject.GetComponent<Collider>();
-            
-            Physics.IgnoreCollision(_playerCollider, _currentColliderObject);
-            _currentRigidbodyObject.drag = 15;
-            
-            _joint.gameObject.transform.position = _currentRigidbodyObject.gameObject.transform.position;
-            _joint.connectedBody = _currentRigidbodyObject;
-        }
-
-        private void Drop(bool isThrow = false)
-        {
-            if (!IsOwner) return;
-            if (_currentRigidbodyObject == null) return;
-            
-            _joint.connectedBody = null;
-
-            _currentRigidbodyObject.drag = 0;
-            _currentRigidbodyObject.velocity = _velocity;
-            if (isThrow) _currentRigidbodyObject.AddForce(_playerCamera.transform.forward * _trowForce, ForceMode.Impulse);
-
-            Physics.IgnoreCollision(_playerCollider, _currentColliderObject, false);
-            
-            _currentRigidbodyObject = null;
-        }
-
         public override void OnNetworkDespawn()
         {
             _inputSystem.Player.Jump.performed -= _ => Jump();
-            _inputSystem.Player.PickUp.performed -= _ => PickUp();
-            _inputSystem.Player.Drop.performed -= _ => Drop();
-            _inputSystem.Player.Trow.performed -= _ => Drop(true);
-            _inputSystem.Player.Disable();
 
             _outputCamera.Dispose();
             _outputVelocity.Dispose();

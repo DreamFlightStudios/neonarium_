@@ -37,6 +37,7 @@ namespace Gun
         private void Update()
         {
             if (!IsOwner) return;
+            if (!Application.isFocused) return;
             if (!_canShoot) return;
             
             _time += Time.deltaTime;
