@@ -11,10 +11,7 @@ namespace Player
     public class PlayerMovement : MonoBehaviour
     {
         [SerializeField] private float _walkSpeed = 5;
-        [SerializeField] private float _runSpeed = 8;
         [SerializeField] private float _rotateSpeed = 10;
-        [SerializeField] private float _jumpForce = 5;
-        [SerializeField] private float _gravity = -9.81f;
         
         [SerializeField] private float _pickUpDistance = 5;
         [SerializeField] private float _trowForce = 6;
@@ -37,7 +34,6 @@ namespace Player
         private void Start()
         {
             _inputSystem = new InputSystem();
-            _inputSystem.Player.Jump.performed += _ => Jump();
             _inputSystem.Player.PickUp.performed += _ => PickUp();
             _inputSystem.Player.PickUp.canceled += _ => Drop();
             _inputSystem.Player.Trow.performed += _ => Drop(true);
@@ -51,12 +47,11 @@ namespace Player
             _outputCamera = new NativeArray<Vector2>( 2, Allocator.Persistent); 
             _outputVelocity = new NativeArray<Vector3>(2, Allocator.Persistent);
             
-            Cursor.lockState = CursorLockMode.Locked;
             Input.gyro.enabled = true;
         }
 
         private void Update()
-        {
+        { 
             NativeArray<JobHandle> jobs = new NativeArray<JobHandle>(2, Allocator.Temp);
 
             _outputCamera[0] = _rotation;
@@ -73,11 +68,11 @@ namespace Player
             {
                 Velocity = _outputVelocity,
                 WalkSpeed = _walkSpeed,
-                RunSpeed = _runSpeed,
                 CameraAnglesY = _playerCamera.transform.localEulerAngles.y,
                 Direction = _inputSystem.Player.Move.ReadValue<Vector2>(),
-                IsSprint = _inputSystem.Player.Sprint.IsPressed()
             };
+
+            _characterController.transform.Rotate(0, _playerCamera.transform.rotation.y, 0);
 
             jobs[0] = cameraRotateCalculation.Schedule();
             jobs[1] = velocityCalculation.Schedule();
@@ -85,20 +80,11 @@ namespace Player
 
             _rotation = _outputCamera[1];
             _velocity = _outputVelocity[1];
-            
 
             //_playerCamera.transform.localEulerAngles = _rotation;
             _characterController.Move(_velocity * Time.deltaTime);
             _playerCamera.transform.localRotation = Input.gyro.attitude * new Quaternion(0, 0, 1, 0);
         }
-
-        private void FixedUpdate()
-        {
-            if (_characterController.isGrounded) _velocity.y = -0.1f;
-            else _velocity.y += _gravity * Time.fixedDeltaTime;
-        }
-
-        private void Jump() { if (_characterController.isGrounded) _velocity.y = _jumpForce; }
 
         private void PickUp()
         {
@@ -131,7 +117,6 @@ namespace Player
 
         private void OnDestroy()
         {
-            _inputSystem.Player.Jump.performed -= _ => Jump();
             _inputSystem.Player.PickUp.performed -= _ => PickUp();
             _inputSystem.Player.PickUp.canceled -= _ => Drop();
             _inputSystem.Player.Trow.performed -= _ => Drop(true);
@@ -167,16 +152,14 @@ public struct CameraRotateCalculation : IJob
 public struct VelocityCalculation : IJob
 {
     [ReadOnly] public float WalkSpeed;
-    [ReadOnly] public float RunSpeed;
     [ReadOnly] public float CameraAnglesY;
-    [ReadOnly] public bool IsSprint;
     [ReadOnly] public Vector2 Direction;
     public NativeArray<Vector3> Velocity;
     
     public void Execute()
     {
         Vector3 velocity = Velocity[0];
-        Direction *= IsSprint ? RunSpeed : WalkSpeed;
+        Direction *= WalkSpeed;
         Vector3 move = Quaternion.Euler(0, CameraAnglesY, 0) * new Vector3(Direction.x, 0, Direction.y);
         Velocity[1] = new Vector3(move.x, velocity.y, move.z);
     }
