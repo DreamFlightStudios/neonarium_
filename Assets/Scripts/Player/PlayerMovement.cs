@@ -1,57 +1,54 @@
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
+using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 
 namespace Player
 {
     [RequireComponent(typeof(CharacterController))]
-    public class PlayerMovement : MonoBehaviour
+    public class PlayerMovement : NetworkBehaviour
     {
         [SerializeField] private float _walkSpeed = 5;
+        [SerializeField] private float _runSpeed = 8;
         [SerializeField] private float _rotateSpeed = 10;
-        
-        [SerializeField] private float _pickUpDistance = 5;
-        [SerializeField] private float _trowForce = 6;
-        [SerializeField] private LayerMask _canPickUpLayer;
+        [SerializeField] private float _jumpForce = 5;
+        [SerializeField] private float _gravity = -9.81f;
 
         private InputSystem _inputSystem;
         private CharacterController _characterController;
-        private Collider _playerCollider;
         private Camera _playerCamera;
 
         private Vector3 _velocity;
         private Vector2 _rotation;
         private NativeArray<Vector2> _outputCamera;
         private NativeArray<Vector3> _outputVelocity;
+        
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+            if (IsClient && IsOwner) Init();
+        }
 
-        private Joint _joint;
-        private Rigidbody _currentRigidbodyObject;
-        private Collider _currentColliderObject;
-
-        private void Start()
+        private void Init()
         {
             _inputSystem = new InputSystem();
-            _inputSystem.Player.PickUp.performed += _ => PickUp();
-            _inputSystem.Player.PickUp.canceled += _ => Drop();
-            _inputSystem.Player.Trow.performed += _ => Drop(true);
+            _inputSystem.Player.Jump.performed += _ => Jump();
             _inputSystem.Player.Enable();
-
+            
             _characterController = GetComponent<CharacterController>();
-            _playerCollider = GetComponent<Collider>();
             _playerCamera = GetComponentInChildren<Camera>();
-            _joint = GetComponentInChildren<Joint>();
             
             _outputCamera = new NativeArray<Vector2>( 2, Allocator.Persistent); 
             _outputVelocity = new NativeArray<Vector3>(2, Allocator.Persistent);
             
-            Input.gyro.enabled = true;
+            Cursor.lockState = CursorLockMode.Locked;
         }
 
         private void Update()
-        { 
+        {
+            if (!IsOwner) return;
+            if (!Application.isFocused) return;
             NativeArray<JobHandle> jobs = new NativeArray<JobHandle>(2, Allocator.Temp);
 
             _outputCamera[0] = _rotation;
@@ -68,11 +65,11 @@ namespace Player
             {
                 Velocity = _outputVelocity,
                 WalkSpeed = _walkSpeed,
+                RunSpeed = _runSpeed,
                 CameraAnglesY = _playerCamera.transform.localEulerAngles.y,
                 Direction = _inputSystem.Player.Move.ReadValue<Vector2>(),
+                IsSprint = _inputSystem.Player.Sprint.IsPressed()
             };
-
-            _characterController.transform.Rotate(0, _playerCamera.transform.rotation.y, 0);
 
             jobs[0] = cameraRotateCalculation.Schedule();
             jobs[1] = velocityCalculation.Schedule();
@@ -81,49 +78,26 @@ namespace Player
             _rotation = _outputCamera[1];
             _velocity = _outputVelocity[1];
 
-            //_playerCamera.transform.localEulerAngles = _rotation;
+            _playerCamera.transform.localEulerAngles = _rotation;
             _characterController.Move(_velocity * Time.deltaTime);
-            _playerCamera.transform.localRotation = Input.gyro.attitude * new Quaternion(0, 0, 1, 0);
         }
 
-        private void PickUp()
+        private void FixedUpdate()
         {
-            if (!Physics.Raycast(_playerCamera.transform.position, _playerCamera.transform.forward, out RaycastHit hit, _pickUpDistance, _canPickUpLayer)) return;
-            
-            _currentRigidbodyObject = hit.collider.gameObject.GetComponent<Rigidbody>();
-            _currentColliderObject = _currentRigidbodyObject.GetComponent<Collider>();
-            
-            Physics.IgnoreCollision(_playerCollider, _currentColliderObject);
-            _currentRigidbodyObject.drag = 15;
-            
-            _joint.gameObject.transform.position = _currentRigidbodyObject.gameObject.transform.position;
-            _joint.connectedBody = _currentRigidbodyObject;
+            if (!IsOwner) return;
+            if (_characterController.isGrounded) _velocity.y = -0.1f;
+            else _velocity.y += _gravity * Time.fixedDeltaTime;
         }
 
-        private void Drop(bool isThrow = false)
+        private void Jump() { if (_characterController.isGrounded) _velocity.y = _jumpForce; }
+
+        public override void OnNetworkDespawn()
         {
-            if (_currentRigidbodyObject == null) return;
-            
-            _joint.connectedBody = null;
+            _inputSystem.Player.Jump.performed -= _ => Jump();
 
-            _currentRigidbodyObject.drag = 0;
-            _currentRigidbodyObject.velocity = _velocity;
-            if (isThrow) _currentRigidbodyObject.AddForce(_playerCamera.transform.forward * _trowForce, ForceMode.Impulse);
-
-            Physics.IgnoreCollision(_playerCollider, _currentColliderObject, false);
-            
-            _currentRigidbodyObject = null;
-        }
-
-        private void OnDestroy()
-        {
-            _inputSystem.Player.PickUp.performed -= _ => PickUp();
-            _inputSystem.Player.PickUp.canceled -= _ => Drop();
-            _inputSystem.Player.Trow.performed -= _ => Drop(true);
-            _inputSystem.Player.Disable();
-            
             _outputCamera.Dispose();
             _outputVelocity.Dispose();
+            base.OnNetworkDespawn();
         }
     }
 }
@@ -152,14 +126,16 @@ public struct CameraRotateCalculation : IJob
 public struct VelocityCalculation : IJob
 {
     [ReadOnly] public float WalkSpeed;
+    [ReadOnly] public float RunSpeed;
     [ReadOnly] public float CameraAnglesY;
+    [ReadOnly] public bool IsSprint;
     [ReadOnly] public Vector2 Direction;
     public NativeArray<Vector3> Velocity;
     
     public void Execute()
     {
         Vector3 velocity = Velocity[0];
-        Direction *= WalkSpeed;
+        Direction *= IsSprint ? RunSpeed : WalkSpeed;
         Vector3 move = Quaternion.Euler(0, CameraAnglesY, 0) * new Vector3(Direction.x, 0, Direction.y);
         Velocity[1] = new Vector3(move.x, velocity.y, move.z);
     }
