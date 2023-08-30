@@ -19,6 +19,7 @@ namespace Player
         private InputSystem _inputSystem;
         private CharacterController _characterController;
         private Camera _playerCamera;
+        private PlayerVfx _vfx;
 
         private Vector3 _velocity;
         private Vector2 _rotation;
@@ -36,6 +37,8 @@ namespace Player
             _inputSystem = new InputSystem();
             _inputSystem.Player.Jump.performed += _ => Jump();
             _inputSystem.Player.Enable();
+
+            _vfx = new PlayerVfx(GetComponent<Animator>());
             
             _characterController = GetComponent<CharacterController>();
             _playerCamera = GetComponentInChildren<Camera>();
@@ -49,7 +52,9 @@ namespace Player
         private void Update()
         {
             if (!IsOwner) return;
-            if (!Application.isFocused) return;
+            
+            bool isSprint = _inputSystem.Player.Sprint.IsPressed();
+            
             NativeArray<JobHandle> jobs = new NativeArray<JobHandle>(2, Allocator.Temp);
 
             _outputCamera[0] = _rotation;
@@ -69,7 +74,7 @@ namespace Player
                 RunSpeed = _runSpeed,
                 CameraAnglesY = _playerCamera.transform.localEulerAngles.y,
                 Direction = _inputSystem.Player.Move.ReadValue<Vector2>(),
-                IsSprint = _inputSystem.Player.Sprint.IsPressed()
+                IsSprint = isSprint
             };
 
             jobs[0] = cameraRotateCalculation.Schedule();
@@ -78,9 +83,12 @@ namespace Player
 
             _rotation = _outputCamera[1];
             _velocity = _outputVelocity[1];
-
-            _playerCamera.transform.localEulerAngles = _rotation;
+            
+            _vfx.Move(_velocity.x != 0 || _velocity.z != 0 ? isSprint ? 1 : 0.5f : 0);
+            _vfx.Fall(_velocity.y);
+            if (Application.isFocused) _playerCamera.transform.localEulerAngles = _rotation;
             _characterController.Move(_velocity * Time.deltaTime);
+            print(_velocity.y);
         }
 
         private void FixedUpdate()
