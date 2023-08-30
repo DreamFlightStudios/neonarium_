@@ -9,6 +9,7 @@ namespace Player
     [RequireComponent(typeof(CharacterController))]
     public class PlayerMovement : NetworkBehaviour
     {
+        [Header("Float")]
         [SerializeField] private float _walkSpeed = 5;
         [SerializeField] private float _runSpeed = 8;
         [SerializeField] private float _rotateSpeed = 10;
