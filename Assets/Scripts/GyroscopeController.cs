@@ -28,7 +28,7 @@ public class GyroscopeController : MonoBehaviour
 
         StartCoroutine(CalibrateYAngle());
     }
-
+    
     private void Update()
     {
         ApplyGyroRotation();
