@@ -1,3 +1,4 @@
+using System;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
@@ -41,7 +42,7 @@ namespace Player
             _vfx = new PlayerVfx(GetComponent<Animator>());
             
             _characterController = GetComponent<CharacterController>();
-            _playerCamera = GetComponentInChildren<Camera>();
+            _playerCamera = Camera.main;
             
             _outputCamera = new NativeArray<Vector2>( 2, Allocator.Persistent); 
             _outputVelocity = new NativeArray<Vector3>(2, Allocator.Persistent);
@@ -86,14 +87,23 @@ namespace Player
             
             _vfx.Move(_velocity.x != 0 || _velocity.z != 0 ? isSprint ? 1 : 0.5f : 0);
             _vfx.Fall(_velocity.y);
-            if (Application.isFocused) _playerCamera.transform.localEulerAngles = _rotation;
+            
             _characterController.Move(_velocity * Time.deltaTime);
-            print(_velocity.y);
+        }
+
+        private void LateUpdate()
+        {
+            if (!IsOwner || !Application.isFocused) return;
+
+            _playerCamera.transform.position = new Vector3(transform.position.x, transform.position.y + 0.75f, transform.position.z);
+            _playerCamera.transform.localEulerAngles = _rotation;
+            transform.GetChild(0).transform.localEulerAngles = _rotation;
         }
 
         private void FixedUpdate()
         {
             if (!IsOwner) return;
+            
             if (_characterController.isGrounded) _velocity.y = -0.1f;
             else _velocity.y += _gravity * Time.fixedDeltaTime;
         }

@@ -5,15 +5,13 @@ namespace HealthSystem
 {
     public class Health : NetworkBehaviour, IHealthSystem
     {
-        [SerializeField] private int _maxHealth = 3;
-        private readonly NetworkVariable<int> _currentHealth = new NetworkVariable<int>();
-        private PlayerManager _playerManager;
+        [SerializeField] private byte _maxHealth = 3;
+        private readonly NetworkVariable<byte> _currentHealth = new();
         private bool _isDied;
 
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
-            _playerManager = FindObjectOfType<PlayerManager>();
             Init();
         }
 
@@ -23,7 +21,7 @@ namespace HealthSystem
             _isDied = false;
         }
 
-        public void ApplyDamage(int damage)
+        public void ApplyDamage(byte damage)
         {
             if (_isDied) return;
             
@@ -35,14 +33,9 @@ namespace HealthSystem
         }
 
         [ServerRpc(RequireOwnership = false)]
-        private void DieServerRpc()
-        {
-            NetworkObject.Despawn(false);
-            gameObject.SetActive(false);
-            _playerManager.SpawnPlayerWithDelay(this);
-        }
+        private void DieServerRpc() => NetworkObject.Despawn();
 
-        public void Recovery(int health) { if (!_isDied) ChangeHealthServerRpc(_currentHealth.Value + health); }
+        public void Recovery(byte health) { if (!_isDied) ChangeHealthServerRpc(_currentHealth.Value + health); }
 
         public void Revival()
         {
@@ -54,7 +47,7 @@ namespace HealthSystem
         [ServerRpc(RequireOwnership = false)]
         private void ChangeHealthServerRpc(int value)
         {
-            _currentHealth.Value = value;
+            _currentHealth.Value = (byte)value;
             Mathf.Clamp(_currentHealth.Value, 0, _maxHealth);
         }
     }

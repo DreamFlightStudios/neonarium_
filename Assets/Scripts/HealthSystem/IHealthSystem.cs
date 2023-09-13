@@ -2,9 +2,9 @@ namespace HealthSystem
 {
     public interface IHealthSystem
     {
-        void ApplyDamage(int damage);
+        void ApplyDamage(byte damage);
 
-        void Recovery(int health);
+        void Recovery(byte health);
 
         void Revival();
     }

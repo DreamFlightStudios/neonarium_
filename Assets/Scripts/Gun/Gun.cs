@@ -7,13 +7,13 @@ namespace Gun
 {
     public class Gun : NetworkBehaviour
     {
-        [SerializeField] private int _damage = 1;
+        [SerializeField] private byte _damage = 1;
         [SerializeField] private float _rateOfFire = 0.1f;
         [SerializeField] private float _recharge = 3;
         [SerializeField] private int _maxClip = 20;
-        [SerializeField] private Transform _shootPoint;
         [SerializeField] private bool _isMachineGun;
-        
+
+        private Transform _originPoint;
         private InputSystem _inputSystem;
         private float _time;
         private int _currentClip;
@@ -30,15 +30,14 @@ namespace Gun
             _inputSystem = new InputSystem();
             _inputSystem.Gun.Recharge.performed += _ => StartCoroutine(Recharge());
             _inputSystem.Gun.Enable();
+            _originPoint = Camera.main.transform;
             _currentClip = _maxClip;
             _time = _rateOfFire;
         }
 
         private void Update()
         {
-            if (!IsOwner) return;
-            if (!Application.isFocused) return;
-            if (!_canShoot) return;
+            if (!IsOwner || !_canShoot || !Application.isFocused) return;
             
             _time += Time.deltaTime;
             if (_time < _rateOfFire) return;
@@ -55,7 +54,7 @@ namespace Gun
 
         protected virtual void Shoot()
         {
-            if (Physics.Raycast(_shootPoint.position, _shootPoint.forward, out RaycastHit hit) && hit.collider.gameObject.TryGetComponent(out IHealthSystem healthSystem))
+            if (Physics.Raycast(_originPoint.position, _originPoint.forward, out RaycastHit hit) && hit.collider.gameObject.TryGetComponent(out IHealthSystem healthSystem))
                 healthSystem.ApplyDamage(_damage);
 
             _currentClip--;
