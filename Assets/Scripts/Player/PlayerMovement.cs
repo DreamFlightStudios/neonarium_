@@ -68,6 +68,8 @@ namespace Player
                 MouseDelta = _inputSystem.Player.Look.ReadValue<Vector2>(),
                 RotateSpeed = _rotateSpeed
             };
+           
+
             VelocityCalculation velocityCalculation = new VelocityCalculation
             {
                 Velocity = _outputVelocity,
@@ -96,8 +98,8 @@ namespace Player
             if (!IsOwner || !Application.isFocused) return;
 
             _playerCamera.transform.position = new Vector3(transform.position.x, transform.position.y + 0.75f, transform.position.z);
-            _playerCamera.transform.localEulerAngles = _rotation;
-            transform.GetChild(0).transform.localEulerAngles = _rotation;
+            //_playerCamera.transform.localEulerAngles = _rotation;
+           //transform.GetChild(0).transform.localEulerAngles = _rotation;
         }
 
         private void FixedUpdate()
