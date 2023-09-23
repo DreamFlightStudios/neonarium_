@@ -3,14 +3,12 @@ using System.Collections;
 
 public class GyroscopeController : MonoBehaviour
 {
-    // STATE
     private float _initialYAngle = 0f;
     private float _appliedGyroYAngle = 0f;
     private float _calibrationYAngle = 0f;
     private Transform _rawGyroRotation;
     private float _tempSmoothing;
 
-    // SETTINGS
     [SerializeField] private float _smoothing = 0.1f;
 
     private IEnumerator Start()

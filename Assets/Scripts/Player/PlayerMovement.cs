@@ -98,6 +98,7 @@ namespace Player
             if (!IsOwner || !Application.isFocused) return;
 
             _playerCamera.transform.position = new Vector3(transform.position.x, transform.position.y + 0.75f, transform.position.z);
+            transform.rotation = Quaternion.Euler(0, _playerCamera.transform.rotation.y, 0);
             //_playerCamera.transform.localEulerAngles = _rotation;
            //transform.GetChild(0).transform.localEulerAngles = _rotation;
         }
