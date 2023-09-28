@@ -58,7 +58,7 @@ namespace Player
 
             _characterController.Move(_velocity * Time.deltaTime);
 
-            _characterController.transform.rotation = Quaternion.Euler(0, _playerCamera.transform.rotation.y, 0);
+            gameObject.transform.rotation = Quaternion.Euler(0, _playerCamera.transform.rotation.y, 0);
         }
 
         private void LateUpdate()
