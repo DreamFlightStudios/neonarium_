@@ -21,7 +21,7 @@ namespace Player
         private Camera _playerCamera;
         private PlayerVfx _vfx;
         private Vector3 _velocity;
-        
+        float rot;
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
@@ -45,18 +45,20 @@ namespace Player
         private void Update()
         {
             if (!IsOwner) return;
-            
+
             bool isSprint = _inputSystem.Player.Sprint.IsPressed();
-            
+
             Vector2 direction = _inputSystem.Player.Move.ReadValue<Vector2>();
             direction *= isSprint ? _runSpeed : _walkSpeed;
             Vector3 move = Quaternion.Euler(0, _playerCamera.transform.localEulerAngles.y, 0) * new Vector3(direction.x, 0, direction.y);
             _velocity = new Vector3(move.x, _velocity.y, move.z);
-            
+
             _vfx.Move(_velocity.x != 0 || _velocity.z != 0 ? isSprint ? 1 : 0.5f : 0);
             _vfx.Fall(_velocity.y);
-            
+
             _characterController.Move(_velocity * Time.deltaTime);
+
+            _characterController.transform.rotation = Quaternion.Euler(0, _playerCamera.transform.rotation.y, 0);
         }
 
         private void LateUpdate()
@@ -64,7 +66,6 @@ namespace Player
             if (!IsOwner || !Application.isFocused) return;
 
             _playerCamera.transform.position = new Vector3(transform.position.x, transform.position.y + 0.75f, transform.position.z);
-            transform.rotation = Quaternion.Euler(0, _playerCamera.transform.rotation.y, 0);
         }
 
         private void FixedUpdate()
