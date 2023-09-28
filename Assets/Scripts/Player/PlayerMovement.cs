@@ -21,7 +21,11 @@ namespace Player
         private Camera _playerCamera;
         private PlayerVfx _vfx;
         private Vector3 _velocity;
-        float rot;
+
+        private void Start()
+        {
+            Input.gyro.enabled = true;
+        }
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
@@ -57,8 +61,6 @@ namespace Player
             _vfx.Fall(_velocity.y);
 
             _characterController.Move(_velocity * Time.deltaTime);
-
-            gameObject.transform.rotation = Quaternion.Euler(0, _playerCamera.transform.rotation.y, 0);
         }
 
         private void LateUpdate()
